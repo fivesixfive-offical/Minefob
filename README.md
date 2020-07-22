@@ -5,7 +5,7 @@ over any Minehut server by utilizing the Minehut API
 
 ## Installation
 
-~~Use the package manager pip to install foobar.~~
+~~Use the package manager pip to install Minefob.~~
 
 ```bash
 pip install minefob
