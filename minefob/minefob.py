@@ -5,6 +5,7 @@
 from requests import get, post
 from json import loads
 from time import sleep, time
+from datetime import datetime as dt
 
 # Minefob
 class Minefob:
@@ -20,7 +21,6 @@ class Minefob:
 			raise RuntimeError("Unable to find server by that name.  Could it be misspelled?")
 		else: # if oki doki
 			servId = loads(req.text)["server"]["_id"]
-			print(servId)
 
 		# Important Constants
 		self.MAIL = email
@@ -30,7 +30,6 @@ class Minefob:
 		self.SERV = self.HOST + "/server/" + servId
 
 		# Important Vars
-		self.online = False
 		self.lastAuth = 0
 		self.auth = None
 
@@ -61,6 +60,16 @@ class Minefob:
 		# up the process, espesially for things like the countdown that would normally
 		# call the auth func multiple times in a sequence
 
+	# Interal
+	def _getStat(self):
+		# Get token
+		heads = self._auth()
+		# Get return info
+		req = get(self.SERV+"/status", headers=heads)
+		rDict = loads(req.text)["status"]
+
+		return rDict
+
 	# Testing for whatever
 	def _test(self):
 		# Get token
@@ -68,7 +77,7 @@ class Minefob:
 		print(loads(get(self.SERV+"/status", headers=heads).text)["status"]["status"])
 	#endregion
 
-	#region Anything using a /send_command
+	#region Anything using POST
 	# Send a message to chat
 	def say(self, words:str):
 		"""Speaks something to the chat. Takes a string as the argument."""
@@ -121,9 +130,7 @@ class Minefob:
 		post(self.SERV+"/send_command", data=combo, headers=heads)
 
 		return True
-	#endregion
 
-	#region Other, more general commands
 	# Save
 	def save(self):
 		"""Saves the server, instantly."""
@@ -159,9 +166,53 @@ class Minefob:
 				sleep(1) # Wait
 
 		# After that
-		self.kick("@a", "Server has been shut down.") # Kick players
-		self.save() # Save Server
-		post(self.SERV+"/destroy_service", headers=heads) # Shut down
+		#self.kick("@a", "Server has been shut down.") # Kick players
+		#self.save() # Save Server
+		#post(self.SERV+"/destroy_service", headers=heads) # Shut down
 
 		return True
+	#endregion
+
+	# region Anything using GET (usually properties)
+	# Return player count
+	@property
+	def players(self):
+		"""Returns int"""
+		return self._getStat()["player_count"]
+
+	# Return online or not
+	@property
+	def online(self):
+		"""Returns bool"""
+		return self._getStat()["service_online"]
+
+	# Return server status as string (Starting, stopping, etc)
+	@property
+	def status(self):
+		"""Returns string displaying server status"""
+		return self._getStat()["status"]
+
+	# Returns time server was started
+	@property
+	def started(self):
+		"""Returns the time [hh, mm, ss] the server was started.
+		Returns False is server is offline."""
+		if self.online:
+			properFormat = self._getStat()["started_at"] / 1e3 # Convert raw int time to proper int format
+			rData = dt.fromtimestamp(properFormat).strftime("%I:%M:%S") # Get HOURS, MINUTES, SECONDS
+			return str(rData).split(":") # Turn into list
+		else:
+			return False
+
+	# Returns time server was stopped
+	@property
+	def stopped(self):
+		"""Returns the time [hh, mm, ss] the server was stopped.
+		Returns False if unable if something goes wrong."""
+		if not self.online:
+			return False
+		else:
+			properFormat = self._getStat()["stopped_at"] / 1e3
+			rData = dt.fromtimestamp(properFormat).strftime("%I:%M:%S")
+			return str(rData).split(":")
 	#endregion
