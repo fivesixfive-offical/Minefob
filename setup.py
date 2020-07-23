@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
 	long_description = fh.read()
 
 setuptools.setup(
-	name="minefob-fivesixfive",
-	version="0.0.1",
+	name="minefob",
+	version="1.0.0",
 	author="Caleb T. North",
 	author_email="fivesixfive.contact@gmail.com",
 	description="A package that provides full control over any Minehut server",
@@ -20,3 +20,4 @@ setuptools.setup(
 	],
 	python_requires='>=3.6'
 )
+
